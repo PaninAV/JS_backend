@@ -1,11 +1,12 @@
 const express = require("express");
-const { Model } = require("sequelize");
 const { initDB } = require("./db");
 const ToDo = require("./db/models/ToDo model");
 const app = express();
 const port = 3100;
+const cors = require("cors");
 
 app.use(express.json());
+app.use(cors());
 
 app.listen(port, () => {
   console.log("Application listening on port " + port);
@@ -72,7 +73,7 @@ app.delete("/delete", (req, res) => {
 
 initDB();
 
-app.get("/api/todos", async (req, res) => {
+app.get("/api/todo", async (req, res) => {
   try {
     const list = await ToDo.findAll();
     res.json({ todoList: list });
@@ -81,22 +82,25 @@ app.get("/api/todos", async (req, res) => {
   }
 });
 
-app.get("/api/todos/:id", async (req, res) => {
+app.get("/api/todo/:id", async (req, res) => {
   try {
     //как сократить запись
-      //если null то 404 + "todo not found"
     const single_todo = await ToDo.findOne({
       where: {
         id: req.params.id,
       },
     });
-    res.json({ todo: single_todo });
+    if (single_todo === null) {
+      res.status(404).json({ message: "ToDo not found" });
+    } else {
+      res.json({ todo: single_todo });
+    }
   } catch (error) {
     res.status(500).json({ message: "ERROR" });
   }
 });
 
-app.post("/api/todos", async (req, res) => {
+app.post("/api/todo", async (req, res) => {
   try {
     const todo = await ToDo.create({
       title: req.body.title,
@@ -108,39 +112,59 @@ app.post("/api/todos", async (req, res) => {
   }
 });
 
-app.patch("/api/todos/:id", async (req, res) => {
+app.patch("/api/todo/:id", async (req, res) => {
   try {
-    // сначал проверить что она не null
-    await ToDo.update(
-      {
-        title: req.body.title,
-        description: req.body.description,
-      },
-      {
-        where: { id: req.params.id },
-      }
-    );
-    res.json({ message: "complete" });
+    if (
+      (await ToDo.findOne({
+        where: {
+          id: req.params.id,
+        },
+      })) == null
+    ) {
+      res.status(404).json({ message: "ToDo not found" });
+    } else {
+      await ToDo.update(
+        {
+          title: req.body.title,
+          description: req.body.description,
+        },
+        {
+          where: {
+            id: req.params.id,
+          },
+        }
+      );
+      res.json({ message: "complete" });
+    }
   } catch (error) {
     res.status(500).json({ message: "ERROR" });
   }
 });
 
-app.delete("/api/todos/id", async (req, res) => {
+app.delete("/api/todo/:id", async (req, res) => {
   try {
-    //проверить на null
-    await ToDo.destroy({
-      where: {
-        id: req.body.id,
-      },
-    });
-    res.json({ message: "Complete" });
+    if (
+      (await ToDo.findOne({
+        where: {
+          id: req.params.id,
+        },
+      })) == null
+    ) {
+      res.status(404).json({ message: "ToDo not found" });
+    } else {
+      await ToDo.destroy({
+        where: {
+          id: req.params.id,
+        },
+      });
+      res.json({ message: "Complete" });
+    }
   } catch (error) {
     res.status(500).json({ message: "ERROR" });
   }
 });
 
-app.delete("/api/todos", async (req, res) => {
+app.delete("/api/todo", async (req, res) => {
   try {
     await ToDo.destroy({ where: {} });
     res.json({ message: "Complete" });
