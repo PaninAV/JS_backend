@@ -11,7 +11,6 @@ const initDB = async () => {
         console.log("Sequelize was initialized");
     } catch (error) {
         console.log("Sequelize ERROR (initDB)", error);
-        console.log("XUI")
         process.exit();
     }
 };

@@ -22,6 +22,11 @@ ToDo.init(
             type: Sequelize.BOOLEAN,
             defaultValue: false,
         },
+        userId: {
+            type: Sequelize.DataTypes.UUID,
+            defaultValue: ""
+        }
+        
     },
 
     {sequelize: sequelizeInstance, underscored: true, modelName: "todo"}   
